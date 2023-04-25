@@ -56,6 +56,25 @@ const findHotel = async (req, res) => {
   }
 };
 
+const findAllHotel = async (req, res) => {
+
+  try {
+    const hotels = await Hotel.find();
+
+    const hotelsWithUrls = hotels.map(hotel => ({
+      _id: hotel._id,
+      name: hotel.name,
+      location: hotel.location
+    }));
+    console.log(hotelsWithUrls)
+
+    res.status(200).json(hotelsWithUrls);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 const findBooking = async (req, res) => {
   try {
     const userId = req.params.userId;
@@ -193,4 +212,4 @@ const findRoom = async (req, res) => {
 };
 
 
-module.exports = { addHotel, addRoom, findHotel, findRoom, reserveRoom, findBooking };
+module.exports = { addHotel, addRoom, findHotel, findRoom, reserveRoom, findBooking, findAllHotel };
