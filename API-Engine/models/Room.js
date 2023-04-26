@@ -17,7 +17,6 @@ const RoomSchema = new mongoose.Schema({
 
     amount: {
         type: Number,
-        required: true
     },
 
     info: {
@@ -26,6 +25,10 @@ const RoomSchema = new mongoose.Schema({
 
     reserved:{
         type:Boolean
+    },
+
+    image:{
+        type:String,
     },
 
     hotel: [{ 

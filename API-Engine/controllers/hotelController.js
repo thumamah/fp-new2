@@ -89,19 +89,28 @@ const findBooking = async (req, res) => {
 };
 
 const addRoom = async (req, res) => {
+  upload.any()(req, res, async function (err) {
+    if (err instanceof multer.MulterError) {
+      return res.status(500).json(err);
+    } else if (err) {
+      return res.status(500).json(err);
+    }
+
+    const image = req.files ? req.files[0].filename : undefined;
+    console.log(req.files)
   try {
     const hotel = await Hotel.findById(req.params.hotelId);
     if (!hotel) {
       return res.status(404).json({ message: 'Hotel not found' });
     }
-    const { number, reserved, price, amount, info } = req.body;
+    const { number, price, amount, info } = req.body;
     const room = new Room({
       number,
-      reserved,
       price,
       amount,
       info,
       hotel: hotel._id,
+      image: image,
     });
     await room.save();
     await Hotel.findByIdAndUpdate(req.params.hotelId, { $push: { rooms: room._id }, });
@@ -110,6 +119,7 @@ const addRoom = async (req, res) => {
     console.error(error.message);
     res.status(500).json({ message: 'Server error' });
   }
+});
 };
 
 const reserveRoom = async (req, res) => {
@@ -202,9 +212,18 @@ const findRoom = async (req, res) => {
       hotel: hotelId,
       _id: { $nin: bookedRoomIds },
     });
-    console.log("availableRooms", availableRooms)
 
-    res.status(200).json({ availableRooms });
+    // find room including the images
+    const roomsWithImages = availableRooms.map(room => ({
+      _id: room._id,
+      number: room.number,
+      price: room.price,
+      info: room.info,
+      image: `http://localhost:3001/uploads/${room.image}`
+    }));
+    console.log("availableRooms", roomsWithImages)
+
+    res.status(200).json({ roomsWithImages });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Server error' });
