@@ -88,6 +88,19 @@ const findBooking = async (req, res) => {
   }
 };
 
+// find all bookings
+const findAllBooking = async (req, res) => {
+  try {
+    
+    //console.log(req)
+    const bookings = await Booking.find();
+    res.status(200).json({ bookings });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 const addRoom = async (req, res) => {
   upload.any()(req, res, async function (err) {
     if (err instanceof multer.MulterError) {
@@ -231,4 +244,4 @@ const findRoom = async (req, res) => {
 };
 
 
-module.exports = { addHotel, addRoom, findHotel, findRoom, reserveRoom, findBooking, findAllHotel };
+module.exports = { addHotel, addRoom, findHotel, findAllBooking,  findRoom, reserveRoom, findBooking, findAllHotel };

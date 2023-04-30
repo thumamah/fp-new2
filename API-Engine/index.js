@@ -45,6 +45,8 @@ app.get('/findBooking/:userId', hotelController.findBooking);
 
 // get all hotels fro admin
 app.get('/findAllHotel', hotelController.findAllHotel);
+// get all bookings for admin
+app.get('/findAllBookings', hotelController.findAllBooking);
 
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
