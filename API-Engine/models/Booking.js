@@ -9,6 +9,10 @@ const BookingSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
       },
+      HotelId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Hotel',
+      },
       startDate: {
         type: Date,
         required: true,
@@ -24,6 +28,9 @@ const BookingSchema = new mongoose.Schema({
       totalPrice: {
         type: Number,
         required: true,
+      },
+      hotelName: {
+        type: String,
       },
 });
 

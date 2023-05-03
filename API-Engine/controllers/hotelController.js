@@ -91,8 +91,29 @@ const findBooking = async (req, res) => {
 // find all bookings
 const findAllBooking = async (req, res) => {
   try {
-    
+
     //console.log(req)
+    const date = new Date('2024-03-16');
+    const hotelId = '643410821f754978dc361c2b';
+
+    const roomOccupied = await Booking.countDocuments({
+      startDate: { $lte: date },
+      endDate: { $gte: date },
+      HotelId: hotelId,
+    })
+    console.log(roomOccupied)
+
+
+    
+    console.log('oc' + roomOccupied)
+
+    const totalRooms = await Room.countDocuments({ hotel: hotelId });
+    console.log('t' + totalRooms)
+
+    const occupancyRate = (roomOccupied / totalRooms) * 100;
+    console.log('r' + occupancyRate)
+
+    ///////////////////////
     const bookings = await Booking.find();
     res.status(200).json({ bookings });
   } catch (error) {
@@ -111,33 +132,33 @@ const addRoom = async (req, res) => {
 
     const image = req.files ? req.files[0].filename : undefined;
     console.log(req.files)
-  try {
-    const hotel = await Hotel.findById(req.params.hotelId);
-    if (!hotel) {
-      return res.status(404).json({ message: 'Hotel not found' });
+    try {
+      const hotel = await Hotel.findById(req.params.hotelId);
+      if (!hotel) {
+        return res.status(404).json({ message: 'Hotel not found' });
+      }
+      const { number, price, amount, info } = req.body;
+      const room = new Room({
+        number,
+        price,
+        amount,
+        info,
+        hotel: hotel._id,
+        image: image,
+      });
+      await room.save();
+      await Hotel.findByIdAndUpdate(req.params.hotelId, { $push: { rooms: room._id }, });
+      res.status(201).json(room);
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).json({ message: 'Server error' });
     }
-    const { number, price, amount, info } = req.body;
-    const room = new Room({
-      number,
-      price,
-      amount,
-      info,
-      hotel: hotel._id,
-      image: image,
-    });
-    await room.save();
-    await Hotel.findByIdAndUpdate(req.params.hotelId, { $push: { rooms: room._id }, });
-    res.status(201).json(room);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+  });
 };
 
 const reserveRoom = async (req, res) => {
   res.set('Access-Control-Allow-Credentials', 'true');
-  const { roomId, startDate, endDate, totalPrice, numAdults, email } = req.body;
+  const { roomId, startDate, endDate, totalPrice, numAdults, email, hotelName, HotelId } = req.body;
   console.log(email)
   try {
     const existingBooking = await Booking.findOne({
@@ -168,7 +189,10 @@ const reserveRoom = async (req, res) => {
       totalPrice,
       numAdults,
       userId,
+      hotelName,
+      HotelId
     });
+    console.log(booking)
     await booking.save();
     res.status(201).json({ booking });
     // send registration email
@@ -244,4 +268,4 @@ const findRoom = async (req, res) => {
 };
 
 
-module.exports = { addHotel, addRoom, findHotel, findAllBooking,  findRoom, reserveRoom, findBooking, findAllHotel };
+module.exports = { addHotel, addRoom, findHotel, findAllBooking, findRoom, reserveRoom, findBooking, findAllHotel };
