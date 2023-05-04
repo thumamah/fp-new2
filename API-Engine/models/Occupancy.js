@@ -19,6 +19,11 @@ const OccupancySchema = new mongoose.Schema({
         type: Number, 
         required: true
     },
+
+    HotelId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Hotel',
+      },
 });
 
 const Occupancy = mongoose.model('Occupancy', OccupancySchema);

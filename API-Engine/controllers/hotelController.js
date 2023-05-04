@@ -93,26 +93,7 @@ const findAllBooking = async (req, res) => {
   try {
 
     //console.log(req)
-    const date = new Date('2024-03-16');
-    const hotelId = '643410821f754978dc361c2b';
-
-    const roomOccupied = await Booking.countDocuments({
-      startDate: { $lte: date },
-      endDate: { $gte: date },
-      HotelId: hotelId,
-    })
-    console.log(roomOccupied)
-
-
     
-    console.log('oc' + roomOccupied)
-
-    const totalRooms = await Room.countDocuments({ hotel: hotelId });
-    console.log('t' + totalRooms)
-
-    const occupancyRate = (roomOccupied / totalRooms) * 100;
-    console.log('r' + occupancyRate)
-
     ///////////////////////
     const bookings = await Booking.find();
     res.status(200).json({ bookings });

@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const userController = require('./controllers/userController');
 const hotelController = require('./controllers/hotelController');
+const analysisController = require('./controllers/analysisController');
 const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require('cors');
@@ -50,6 +51,9 @@ app.get('/findBooking/:userId', hotelController.findBooking);
 app.get('/findAllHotel', hotelController.findAllHotel);
 // get all bookings for admin
 app.get('/findAllBookings', hotelController.findAllBooking);
+
+// get occupancy rate
+app.get('/rate/:hotelId', analysisController.calculateOccupancy);
 
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
