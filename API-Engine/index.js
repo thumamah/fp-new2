@@ -12,6 +12,7 @@ const path = require('path');
 const Occupancy = require('./models/Occupancy')
 const Room = require('./models/Room')
 const Booking = require('./models/Booking')
+var cron = require('node-cron');
 
 // const crypto = require('crypto');
 
@@ -53,7 +54,10 @@ app.get('/findAllHotel', hotelController.findAllHotel);
 app.get('/findAllBookings', hotelController.findAllBooking);
 
 // get occupancy rate
-app.get('/rate/:hotelId', analysisController.calculateOccupancy);
+app.get('/rate/:hotelId', analysisController.findOccupancyRates);
+
+// insert occupancy rate
+app.post('/insert', analysisController.updateRate);
 
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -73,54 +77,3 @@ app.listen(3001, async () => {
     console.error('connection error', err);
   }
 });
-
-
-
-// calculate occupancy rate
-// const calculateOccupancy = async (date, hotelId) =>{
-// const occupiedRooms = await Booking.countDocuments({
-//     startDate: {$lte: date},
-//     endDate: {$gte: date},
-//     HotelId: hotelId,
-// })
-
-
-//   //console.log(roomOccupied)
-//   const totalRooms = await Room.countDocuments({ hotel: hotelId });
-
-//   const occupancyRate = (occupiedRooms  / totalRooms) * 100;
-
-//   return {
-//     date,
-//     roomOccupied,
-//     totalRooms,
-//     occupancyRate,
-//   };
-
-// };
-// const date = new Date('2023-03-15');
-// const hotelId = '643410821f754978dc361c2b';
-
-
-// calculateOccupancy(date, hotelId)
-//   .then((result) => {
-//     console.log(result);
-//   })
-//   .catch((error) => {
-//     console.error(error);
-//   });
-// const calculateOccupancy = async (date, hotelId) => {
-
-//   const occupiedRooms = await Booking.countDocuments({
-//     startDate: { $lte: date },
-//     endDate: { $gte: date },
-//     HotelId: hotelId,
-//   })
-// };
-// calculateOccupancy(date, hotelId)
-//   .then((result) => {
-//     console.log(result);
-//   })
-//   .catch((error) => {
-//     console.error(error);
-//   });

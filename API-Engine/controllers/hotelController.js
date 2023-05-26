@@ -138,7 +138,7 @@ const addRoom = async (req, res) => {
 };
 
 const reserveRoom = async (req, res) => {
-  res.set('Access-Control-Allow-Credentials', 'true');
+  //res.set('Access-Control-Allow-Credentials', 'true');
   const { roomId, startDate, endDate, totalPrice, numAdults, email, hotelName, HotelId } = req.body;
   console.log(email)
   try {
