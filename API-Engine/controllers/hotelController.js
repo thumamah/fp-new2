@@ -253,5 +253,28 @@ const findRoom = async (req, res) => {
   }
 };
 
+// delete booking per specific user
+const deleteBooking = async (req, res) =>{
+  try{
+    const {bookingId} = req.params;
 
-module.exports = { addHotel, addRoom, findHotel, findAllBooking, findRoom, reserveRoom, findBooking, findAllHotel };
+    // find booking
+    const booking = await Booking.findById(bookingId);
+
+    // checking if booking is there
+    if(!booking){
+      return res.status(404).json({meesage: "booking not found"})
+
+    }
+
+    await Booking.findByIdAndDelete(bookingId);
+
+    res.json({message: "booking deleted successfully"})
+  }
+  catch(error){
+    console.log(error.message);
+    res.status(500).json({message: "server error"})
+  }
+}
+
+module.exports = { addHotel, addRoom, findHotel, findAllBooking, findRoom, reserveRoom, findBooking, findAllHotel, deleteBooking };

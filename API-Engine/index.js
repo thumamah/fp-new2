@@ -13,6 +13,7 @@ const Occupancy = require('./models/Occupancy')
 const Room = require('./models/Room')
 const Booking = require('./models/Booking')
 var cron = require('node-cron');
+const forgotPass  = require('./controllers/forgotPass');
 
 // const crypto = require('crypto');
 
@@ -61,6 +62,16 @@ app.post('/insert', analysisController.updateRate);
 
 // contact message
 app.post('/contact', userController.message);
+
+// reset pass link
+app.post('/reset', forgotPass.forgot_password);
+
+// user changing pass
+app.post('/changePass', forgotPass.changing_password);
+
+// delete booking
+app.post('/deleteBooking/:bookingId', hotelController.deleteBooking);
+
 
 
 // Serve static files from the uploads directory

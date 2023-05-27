@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema({
   },
   isEmailConfirmed: {
     type: Boolean,
+  },
+
+  resetToken: {
+    type: String
   }
 });
 

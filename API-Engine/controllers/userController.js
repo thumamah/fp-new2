@@ -56,10 +56,13 @@ const login = async (req, res) => {
   try {
     // Check if user exists
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+    if (!user) return res.status(400).json({ message: 'user not found' });
 
     // Check if password is correct
+    console.log(password)
+    console.log(user.password)
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("ismatch ", isMatch)
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     // Create and sign a JWT token for the user
