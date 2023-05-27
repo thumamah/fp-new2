@@ -93,7 +93,7 @@ const findAllBooking = async (req, res) => {
   try {
 
     //console.log(req)
-    
+
     ///////////////////////
     const bookings = await Booking.find();
     res.status(200).json({ bookings });
@@ -140,11 +140,16 @@ const addRoom = async (req, res) => {
 const reserveRoom = async (req, res) => {
   //res.set('Access-Control-Allow-Credentials', 'true');
   const { roomId, startDate, endDate, totalPrice, numAdults, email, hotelName, HotelId } = req.body;
+  const sdate = new Date(startDate);
+  sdate.setDate(sdate.getDate() + 1)
+
+  const edate = new Date(endDate);
+  edate.setDate(edate.getDate() + 1)
   console.log(email)
   try {
     const existingBooking = await Booking.findOne({
       roomId,
-      startDate: { $lt: endDate },
+      startDate: { $lt: sdate },
       endDate: { $gt: startDate },
     });
     if (existingBooking) {
@@ -165,8 +170,8 @@ const reserveRoom = async (req, res) => {
     const userId = decoded.id;
     const booking = new Booking({
       roomId,
-      startDate,
-      endDate,
+      startDate :sdate,
+      endDate: edate,
       totalPrice,
       numAdults,
       userId,

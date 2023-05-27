@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const Contact = require('../models/Contact');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -97,4 +98,45 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-module.exports = { register, login, logout, verifyToken };
+const message = async (req, res, next) => {
+  const { name, email, message } = req.body;
+  try {
+    const contact = new Contact({
+      name,
+      email,
+      message,
+    });
+
+    await contact.save();
+    // send registration email
+    var transporter = nodemailer.createTransport({
+      service: 'hotmail',
+      auth: {
+        user: 'flyhotelbooking@hotmail.com',
+        pass: 'T12345678.'
+      }
+    });
+
+    var mailOptions = {
+      from: 'flyhotelbooking@hotmail.com',
+      to: email,
+      subject: 'inquiry recieved',
+      text: `Dear ${name},\n\nThank you for your message.\n\nBest regards,\nYour Company Name`
+    };
+
+    transporter.sendMail(mailOptions, function(error, info){
+      if (error) {
+        console.log(error);
+      } else {
+        console.log('Email sent: ' + info.response);
+      }
+    });
+
+    res.status(201).json({ message: 'User created successfully' }); 
+    
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { register, login, logout, verifyToken, message };

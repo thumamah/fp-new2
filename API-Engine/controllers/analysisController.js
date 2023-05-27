@@ -68,46 +68,81 @@ var cron = require('node-cron');
 //     }
 // };
 
+// const calculateOccupancy = async () => {
+//     try {
+//         const hotels = await Hotel.find();
+
+//         for (const hotel of hotels) {
+//             const hotelId = hotel._id;
+//             const date = new Date();
+//             // date.setHours(date.getHours() - 1);
+
+
+//             const roomOccupied = await Booking.countDocuments({
+//                 startDate: { $lte: date },
+//                 endDate: { $gte: date },
+//                 HotelId: hotelId,
+//             });
+//             console.log("room occu", roomOccupied)
+
+           
+
+//             const totalRooms = await Room.countDocuments({ hotel: hotelId });
+//             console.log("room total", totalRooms)
+//             const occupancyRate = (roomOccupied / totalRooms) * 100;
+//             console.log("room rate", occupancyRate)
+
+//             const occupancyData = {
+//                 //date: date.toISOString().split('T')[0], // Format the date as "YYYY-MM-DD"
+//                 date,
+//                 occupancyRate,
+//                 roomOccupied,
+//                 totalRooms,
+//                 hotelId,
+//             };
+//             console.log("room data", occupancyData)
+
+//             await updateRate(occupancyData);
+//         }
+
+//         console.log('Occupancy rates calculated and updated for all hotels.');
+//     } catch (error) {
+//         console.error('Error calculating and updating occupancy rates:', error);
+//     }
+// };
+
 const calculateOccupancy = async () => {
     try {
-        const hotels = await Hotel.find();
+        const bookings = await Booking.find();
 
-        for (const hotel of hotels) {
-            const hotelId = hotel._id;
-            const date = new Date();
-            // date.setHours(date.getHours() - 1);
-
-
+        for (const booking of bookings) {
+            const { roomId, startDate, endDate, HotelId } = booking;
+            const totalRooms = await Room.countDocuments({ hotel: HotelId });
             const roomOccupied = await Booking.countDocuments({
-                startDate: { $lte: date },
-                endDate: { $gte: date },
-                HotelId: hotelId,
+                startDate: { $lte: startDate },
+                endDate: { $gte: startDate },
+                HotelId: HotelId,
             });
-            console.log("room occu", roomOccupied)
-
-            const totalRooms = await Room.countDocuments({ hotel: hotelId });
-            console.log("room total", totalRooms)
+            
             const occupancyRate = (roomOccupied / totalRooms) * 100;
-            console.log("room rate", occupancyRate)
 
             const occupancyData = {
-                //date: date.toISOString().split('T')[0], // Format the date as "YYYY-MM-DD"
-                date,
+                date: startDate.toISOString().split("T")[0],
                 occupancyRate,
                 roomOccupied,
                 totalRooms,
-                hotelId,
+                hotelId: HotelId,
             };
-            console.log("room data", occupancyData)
 
             await updateRate(occupancyData);
         }
 
-        console.log('Occupancy rates calculated and updated for all hotels.');
+        console.log('Occupancy');
     } catch (error) {
-        console.error('Error calculating and updating occupancy rates:', error);
+        console.error('Error ', error);
     }
 };
+
 
 const updateRate = async (occupancyData) => {
     try {
@@ -115,8 +150,16 @@ const updateRate = async (occupancyData) => {
 
         //const existingData = await Occupancy.findOne({ HotelId: hotelId, Date: date });
         const formattedDate = new Date(date).toISOString().split("T")[0];
+        console.log("format d ", formattedDate)
 
-        const existingData = await Occupancy.findOne({ HotelId: hotelId, Date: { $gte: formattedDate, $lt: new Date(formattedDate).setDate(new Date(formattedDate).getDate() + 1) } });
+        const time = new Date(formattedDate).setDate(new Date(formattedDate).getDate() + 1)
+        const datestamp = new Date(time);
+
+        const existingData = await Occupancy.findOne({ HotelId: hotelId, Date: { $gte: formattedDate, $lt: datestamp.toISOString() } });
+        console.log("exist ", existingData)
+
+        console.log(datestamp.toISOString())
+
         if (existingData) {
             await Occupancy.updateOne({ _id: existingData._id }, { OccupancyRate: occupancyRate });
         } else {
@@ -130,9 +173,9 @@ const updateRate = async (occupancyData) => {
             await newOccupancy.save();
         }
 
-        console.log(`Occupancy rate updated for hotel ${hotelId} on ${date}.`);
+        console.log(`Occupancy `);
     } catch (error) {
-        console.error('Error updating occupancy rate:', error);
+        console.error('Error ', error);
     }
 };
 
@@ -193,7 +236,7 @@ const findOccupancyRates = async (req, res) => {
 };
 
 
-cron.schedule('0 * * * *', () => {
+cron.schedule('4 * * * *', () => {
     console.log('running a task every hour');
     calculateOccupancy();
 
