@@ -256,11 +256,12 @@ const findRoom = async (req, res) => {
 // delete booking per specific user
 const deleteBooking = async (req, res) =>{
   try{
-    const {bookingId} = req.params;
+    const bookingId = req.body.bookId;
+    console.log("bid ", bookingId)
 
     // find booking
     const booking = await Booking.findById(bookingId);
-
+    console.log("booking ", booking)
     // checking if booking is there
     if(!booking){
       return res.status(404).json({meesage: "booking not found"})

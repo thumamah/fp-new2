@@ -70,7 +70,7 @@ app.post('/reset', forgotPass.forgot_password);
 app.post('/changePass', forgotPass.changing_password);
 
 // delete booking
-app.post('/deleteBooking/:bookingId', hotelController.deleteBooking);
+app.post('/deleteBooking', hotelController.deleteBooking);
 
 
 
