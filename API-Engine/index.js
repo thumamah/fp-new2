@@ -45,7 +45,7 @@ app.get('/findHotel/:location', hotelController.findHotel);
 // find room endpoint
 app.get('/findRoom/:hotelId', hotelController.findRoom);
 // reserve room endpoint
-app.post('/reserve/:roomId', hotelController.reserveRoom);
+app.post('/reserve/:roomId', userController.verifyToken, hotelController.reserveRoom);
 // reserve room endpoint
 app.get('/findBooking/:userId', hotelController.findBooking);
 

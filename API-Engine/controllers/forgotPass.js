@@ -40,7 +40,8 @@ const forgot_password = async (req, res) => {
             if (error) {
                 console.log(error);
             } else {
-                console.log('Email sent: ' + info.response);
+                console.log('Email sent, Check your Email ');
+                return res.status(200).json({ message: "Email sent, Check your Email" })
             }
         });
     } catch (err) {
@@ -61,6 +62,12 @@ const changing_password = async (req, res) => {
         if (!user) {
             return res.status(400).json({ message: "token not found" })
         }
+
+        // checking for strong pasword
+        const strongPass = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
+        if (!strongPass.test(password)) {
+            return res.status(400).json({ message: 'Password should be strong enough: 1 uppercase, lowercase, 1 special char' })
+        }
         console.log(" pass ", password)
         const salt = await bcrypt.genSalt(10);
         const encryptedPass = await bcrypt.hash(password, salt)
@@ -76,7 +83,7 @@ const changing_password = async (req, res) => {
         user.resetToken = undefined
         await user.save()
 
-        res.json({ message: "password changed" })
+        res.json({ message: "Password Changed Successfully" })
 
 
         var transporter = nodemailer.createTransport({

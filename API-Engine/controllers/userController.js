@@ -9,7 +9,20 @@ const nodemailer = require('nodemailer');
 
 const register = async (req, res, next) => {
   const { name, email, password } = req.body;
+
+  // checking for strong pasword
+  const strongPass = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
+  if (!strongPass.test(password)){
+    return res.status(400).json({message: 'Password should be strong enough: 1 uppercase, lowercase, 1 special char'})
+  }
+
+
   try {
+
+    const checkUniqueEmail = await User.findOne({email});
+    if (checkUniqueEmail){
+      return res.status(400).json({message: 'Email Already Exists'})
+    }
     const user = new User({
       name,
       email,
@@ -47,8 +60,6 @@ const register = async (req, res, next) => {
     next(error);
   }
 };
-
-
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -89,7 +100,9 @@ const logout = (req, res) => {
 };
 
 const verifyToken = (req, res, next) => {
-  const token = req.cookies.token;
+  //const token = req.cookies.token;
+  const token = req.headers['x-auth-token'];
+  console.log(req.headers)
   if (!token) return res.status(401).send("Access denied. No token provided.");
 
   try {
