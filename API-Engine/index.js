@@ -15,16 +15,9 @@ const Booking = require('./models/Booking')
 var cron = require('node-cron');
 const forgotPass  = require('./controllers/forgotPass');
 
-// const crypto = require('crypto');
-
-// const secret = crypto.randomBytes(64).toString('hex');
-
-
-
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(cors());
-
 
 // testing endpoint token
 app.get('/auth', userController.verifyToken, (req, res, next) => {
@@ -72,11 +65,8 @@ app.post('/changePass', forgotPass.changing_password);
 // delete booking
 app.post('/deleteBooking', hotelController.deleteBooking);
 
-
-
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 
 // to run the server
 app.listen(3001, async () => {

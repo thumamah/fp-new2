@@ -211,11 +211,15 @@ const reserveRoom = async (req, res) => {
 };
 
 const findRoom = async (req, res) => {
+  // retrieving the relevant parameters and dates from the query
   const { hotelId } = req.params;
   const { startDate, endDate } = req.query;
 
   try {
-    // Find all bookings that overlap with the selected dates
+    // Find all bookings that overlap
+    // using the $in operater it checks if the selected hotel room id is in bookings model
+    // then it checks it startdate is less than endDate which means there is conflict
+    // similarly it checks if endDate is greater than startDate which also means there is conflict 
     const overlappingBookings = await Booking.find({
       roomId: { $in: await Room.find({ hotel: hotelId }) },
       startDate: { $lt: endDate },
@@ -226,17 +230,19 @@ const findRoom = async (req, res) => {
     console.log(endDate)
     console.log("over", overlappingBookings)
 
-    // Get a list of booked room IDs
+    // we want all the room ids whos have already been booked
     const bookedRoomIds = overlappingBookings.map((booking) => booking.roomId);
     console.log("booked", bookedRoomIds)
 
-    // Find all available rooms for the selected dates
+    // now we want to find all rooms in that hotel which have not been booked using
+    // the $nin operator
     const availableRooms = await Room.find({
       hotel: hotelId,
       _id: { $nin: bookedRoomIds },
     });
 
-    // find room including the images
+    // here we do an additional map operation so we can include the room image
+    // which helps in linking to the appropiate room image id in upload folder
     const roomsWithImages = availableRooms.map(room => ({
       _id: room._id,
       number: room.number,
@@ -247,6 +253,7 @@ const findRoom = async (req, res) => {
     console.log("availableRooms", roomsWithImages)
 
     res.status(200).json({ roomsWithImages });
+    // error handling
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Server error' });
