@@ -20,7 +20,7 @@ const forgot_password = async (req, res) => {
         await user.save();
 
         const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
-
+        console.log(resetLink)
         var transporter = nodemailer.createTransport({
             service: 'hotmail',
             auth: {
@@ -51,6 +51,7 @@ const forgot_password = async (req, res) => {
     }
 };
 
+// user changes password
 const changing_password = async (req, res) => {
     const { password, resetToken } = req.body;
 

@@ -3,8 +3,12 @@ const Room = require('../models/Room');
 const Booking = require('../models/Booking');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+// importing multer library
 const multer = require('multer');
+// creating instance of multer and setting up the
+// destination for the images to be stroed
 const upload = multer({ dest: 'uploads/' });
+
 
 const addHotel = async (req, res) => {
   upload.any()(req, res, async function (err) {
@@ -27,12 +31,14 @@ const addHotel = async (req, res) => {
       });
       await hotel.save();
       res.status(201).send(hotel);
+      
     } catch (error) {
       res.status(400).send(error);
     }
   });
 };
 
+// find hotel by location
 const findHotel = async (req, res) => {
   const location = req.params.location;
 
@@ -56,15 +62,17 @@ const findHotel = async (req, res) => {
   }
 };
 
+// find all hotels
 const findAllHotel = async (req, res) => {
 
   try {
     const hotels = await Hotel.find();
 
     const hotelsWithUrls = hotels.map(hotel => ({
-      _id: hotel._id,
-      name: hotel.name,
-      location: hotel.location
+      // _id: hotel._id,
+      // name: hotel.name,
+      // location: hotel.location
+      ...hotel
     }));
     console.log(hotelsWithUrls)
 
@@ -75,26 +83,25 @@ const findAllHotel = async (req, res) => {
   }
 };
 
+// find reservations by user id
 const findBooking = async (req, res) => {
   try {
     const userId = req.params.userId;
     console.log(userId)
     //console.log(req)
+
     const bookings = await Booking.find({ userId });
     res.status(200).json({ bookings });
+
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-// find all bookings
+// find all bookings for admin use
 const findAllBooking = async (req, res) => {
   try {
-
-    //console.log(req)
-
-    ///////////////////////
     const bookings = await Booking.find();
     res.status(200).json({ bookings });
   } catch (error) {
@@ -103,6 +110,7 @@ const findAllBooking = async (req, res) => {
   }
 };
 
+// to add rooms to a selected hotel
 const addRoom = async (req, res) => {
   upload.any()(req, res, async function (err) {
     if (err instanceof multer.MulterError) {
@@ -113,8 +121,10 @@ const addRoom = async (req, res) => {
 
     const image = req.files ? req.files[0].filename : undefined;
     console.log(req.files)
+    const hotelId = req.params.hotelId;
+
     try {
-      const hotel = await Hotel.findById(req.params.hotelId);
+      const hotel = await Hotel.findById(hotelId);
       if (!hotel) {
         return res.status(404).json({ message: 'Hotel not found' });
       }
@@ -128,7 +138,8 @@ const addRoom = async (req, res) => {
         image: image,
       });
       await room.save();
-      await Hotel.findByIdAndUpdate(req.params.hotelId, { $push: { rooms: room._id }, });
+
+      await Hotel.findByIdAndUpdate(hotelId, { $push: { rooms: room._id }, });
       res.status(201).json(room);
     } catch (error) {
       console.error(error.message);
@@ -137,15 +148,16 @@ const addRoom = async (req, res) => {
   });
 };
 
+// room reservation
 const reserveRoom = async (req, res) => {
-  //res.set('Access-Control-Allow-Credentials', 'true');
+  
   const { roomId, startDate, endDate, totalPrice, numAdults, email, hotelName, HotelId } = req.body;
   const sdate = new Date(startDate);
-  sdate.setDate(sdate.getDate() + 1)
-
+  //sdate.setDate(sdate.getDate())
   const edate = new Date(endDate);
-  edate.setDate(edate.getDate() + 1)
+  //edate.setDate(edate.getDate())
   console.log(email)
+  
   try {
     const existingBooking = await Booking.findOne({
       roomId,
@@ -160,9 +172,7 @@ const reserveRoom = async (req, res) => {
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }
-    //const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0MmVkYWE5MGIyOWM1ZDMzZTlkMjZkMCIsIm5hbWUiOiJ0aHVtYW1haCIsImVtYWlsIjoidGVzdEBnbWFpbC5jb20iLCJpYXQiOjE2ODE4MjQ1NzIsImV4cCI6MTY4MTg2MDU3Mn0.U0_PqG22ugdkL3WCpjIXdgTjfFxL1xu_AS5oiHCwjSk';
-    // const token = req.cookies.token
-    // console.log(req.withcredentials)
+    
     const token = req.headers['x-auth-token'];
     //console.log(token)
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -170,7 +180,7 @@ const reserveRoom = async (req, res) => {
     const userId = decoded.id;
     const booking = new Booking({
       roomId,
-      startDate :sdate,
+      startDate: sdate,
       endDate: edate,
       totalPrice,
       numAdults,
@@ -210,6 +220,7 @@ const reserveRoom = async (req, res) => {
   }
 };
 
+// find all available rooms
 const findRoom = async (req, res) => {
   // retrieving the relevant parameters and dates from the query
   const { hotelId } = req.params;
@@ -260,28 +271,36 @@ const findRoom = async (req, res) => {
   }
 };
 
-// delete booking per specific user
-const deleteBooking = async (req, res) =>{
-  try{
+// delete reservation
+const deleteBooking = async (req, res) => {
+  try {
     const bookingId = req.body.bookId;
-    console.log("bid ", bookingId)
+    const endDate = req.body.endDate;
+    console.log("bid ", endDate)
+
+    const current = new Date();
+
+    if (endDate.getDate+1 < current){
+      return res.status(404).json({ meesage: "cannot delete past reservations" })
+    }
+
 
     // find booking
     const booking = await Booking.findById(bookingId);
     console.log("booking ", booking)
     // checking if booking is there
-    if(!booking){
-      return res.status(404).json({meesage: "booking not found"})
+    if (!booking) {
+      return res.status(404).json({ meesage: "booking not found" })
 
     }
 
     await Booking.findByIdAndDelete(bookingId);
 
-    res.json({message: "booking deleted successfully"})
+    res.json({ message: "booking deleted successfully" })
   }
-  catch(error){
+  catch (error) {
     console.log(error.message);
-    res.status(500).json({message: "server error"})
+    res.status(500).json({ message: "server error" })
   }
 }
 

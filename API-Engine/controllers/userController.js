@@ -6,36 +6,39 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
 
-
-const register = async (req, res, next) => {
+const register = async (req, res) => {
   const { name, email, password } = req.body;
-
-  // checking for strong pasword
-  const strongPass = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
-  if (!strongPass.test(password)){
-    return res.status(400).json({message: 'Password should be strong enough: 1 uppercase, lowercase, 1 special char'})
-  }
-
 
   try {
 
-    const checkUniqueEmail = await User.findOne({email});
-    if (checkUniqueEmail){
-      return res.status(400).json({message: 'Email Already Exists'})
+    const checkUniqueEmail = await User.findOne({ email });
+    if (checkUniqueEmail) {
+      return res.status(400).json({ message: 'Email Already Exists' })
     }
+
+    // checking for strong pasword
+    const strongPass = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
+    if (!strongPass.test(password)) {
+      return res.status(400).json({ message: 'Password should be strong enough: 1 uppercase, lowercase, 1 special char' })
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const user = new User({
       name,
       email,
-      password,
+      password: hashedPassword,
     });
+
 
     await user.save();
     // send registration email
     var transporter = nodemailer.createTransport({
       service: 'hotmail',
       auth: {
-        user: 'thumamah50@hotmail.com',
-        pass: 'Thumamah123'
+        user: 'flyhotelbooking@hotmail.com',
+        pass: 'T12345678.'
       }
     });
 
@@ -46,7 +49,7 @@ const register = async (req, res, next) => {
       text: `Dear ${name},\n\nThank you for registering with our service.\n\nBest regards,\nYour Company Name`
     };
 
-    transporter.sendMail(mailOptions, function(error, info){
+    transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
         console.log(error);
       } else {
@@ -54,10 +57,11 @@ const register = async (req, res, next) => {
       }
     });
 
-    res.status(201).json({ message: 'User created successfully' }); 
-    
+    res.status(201).json({ message: 'User created successfully' });
+
   } catch (error) {
-    next(error);
+    console.error(err.message);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -140,7 +144,7 @@ const message = async (req, res, next) => {
       text: `Dear ${name},\n\nThank you for your message.\n\nBest regards,\nYour Company Name`
     };
 
-    transporter.sendMail(mailOptions, function(error, info){
+    transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
         console.log(error);
       } else {
@@ -148,8 +152,8 @@ const message = async (req, res, next) => {
       }
     });
 
-    res.status(201).json({ message: 'User created successfully' }); 
-    
+    res.status(201).json({ message: 'User created successfully' });
+
   } catch (error) {
     next(error);
   }

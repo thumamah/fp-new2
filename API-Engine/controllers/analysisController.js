@@ -3,129 +3,36 @@ const Room = require('../models/Room')
 const Booking = require('../models/Booking')
 const Hotel = require('../models/Hotel')
 var cron = require('node-cron');
-// calculate occupancy rate
-// const calculateOccupancy = async (req, res) => {
-//     const { hotelId } = req.params;
-//     const { date } = req.query;
-
-//     const today_date = new Date();
-//     today_date.setHours(today_date.getHours() - 1);
-
-//     try {
-//         const roomOccupied = await Booking.countDocuments({
-//             startDate: { $lte: date },
-//             endDate: { $gte: date },
-//             HotelId: hotelId,
-//         })
-//         console.log(roomOccupied)
-
-//         console.log('oc' + roomOccupied)
-
-//         const totalRooms = await Room.countDocuments({ hotel: hotelId });
-//         console.log('t' + totalRooms)
-
-//         const occupancyRate = (roomOccupied / totalRooms) * 100;
-//         console.log('r' + occupancyRate)
-
-//         const occupancyData = [{ date, occupancyRate, roomOccupied, totalRooms, hotelId }];
-//         console.log(occupancyData)
-//         res.json(occupancyData);
-//     }
-//     catch (error) {
-//         console.error(error)
-//         res.status(500).json({ error: 'server error' })
-//     }
-
-// }
-
-// // POST /occupancy
-// const updateRate = async (req, res) => {
-//     try {
-//         const { HotelId, Date, OccupancyRate, totalRooms, occupiedRooms } = req.body;
-
-//         // Check if data already exists for this hotel and date
-//         const existingData = await Occupancy.findOne({ HotelId, Date });
-
-//         if (existingData) {
-//             // Update existing data if it already exists
-//             await Occupancy.updateOne({ _id: existingData._id }, { OccupancyRate: OccupancyRate });
-//         } else {
-//             // Create new data if it doesn't exist
-//             const new_occupancy = new Occupancy({
-//                 Date: Date,
-//                 HotelId: HotelId,
-//                 OccupancyRate: OccupancyRate,
-//                 totalRooms: totalRooms,
-//                 occupiedRooms: occupiedRooms
-//             })
-//             await new_occupancy.save();
-//         }
-
-//         res.status(200).json({ message: 'Occupancy data added successfully.' });
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ error: 'Server error' });
-//     }
-// };
-
-// const calculateOccupancy = async () => {
-//     try {
-//         const hotels = await Hotel.find();
-
-//         for (const hotel of hotels) {
-//             const hotelId = hotel._id;
-//             const date = new Date();
-//             // date.setHours(date.getHours() - 1);
 
 
-//             const roomOccupied = await Booking.countDocuments({
-//                 startDate: { $lte: date },
-//                 endDate: { $gte: date },
-//                 HotelId: hotelId,
-//             });
-//             console.log("room occu", roomOccupied)
-
-           
-
-//             const totalRooms = await Room.countDocuments({ hotel: hotelId });
-//             console.log("room total", totalRooms)
-//             const occupancyRate = (roomOccupied / totalRooms) * 100;
-//             console.log("room rate", occupancyRate)
-
-//             const occupancyData = {
-//                 //date: date.toISOString().split('T')[0], // Format the date as "YYYY-MM-DD"
-//                 date,
-//                 occupancyRate,
-//                 roomOccupied,
-//                 totalRooms,
-//                 hotelId,
-//             };
-//             console.log("room data", occupancyData)
-
-//             await updateRate(occupancyData);
-//         }
-
-//         console.log('Occupancy rates calculated and updated for all hotels.');
-//     } catch (error) {
-//         console.error('Error calculating and updating occupancy rates:', error);
-//     }
-// };
-
+// calculating occupancy rate
 const calculateOccupancy = async () => {
     try {
+        // get all the bookings from booking model
         const bookings = await Booking.find();
 
+        // iterate over all bookings
         for (const booking of bookings) {
+
+            // extracting the neccessary values from the booking
             const { roomId, startDate, endDate, HotelId } = booking;
+
+            // getting the total rooms
             const totalRooms = await Room.countDocuments({ hotel: HotelId });
+
+            // getting the occupied rooms
             const roomOccupied = await Booking.countDocuments({
                 startDate: { $lte: startDate },
                 endDate: { $gte: startDate },
                 HotelId: HotelId,
             });
             
+            // calculating total occupancy rate
             const occupancyRate = (roomOccupied / totalRooms) * 100;
 
+            // preparing all data to send to the update occupancy rate algorithm
+            // the start date is splitted to extract first part of it to compare 
+            // later in the update algorithm
             const occupancyData = {
                 date: startDate.toISOString().split("T")[0],
                 occupancyRate,
@@ -134,6 +41,7 @@ const calculateOccupancy = async () => {
                 hotelId: HotelId,
             };
 
+            // calling the update algorithm and passing in data to update it
             await updateRate(occupancyData);
         }
 
@@ -143,23 +51,31 @@ const calculateOccupancy = async () => {
     }
 };
 
-
 const updateRate = async (occupancyData) => {
     try {
+        // extracting all the occupancy data from the previous algorithm
         const { hotelId, date, occupancyRate, totalRooms, roomOccupied } = occupancyData;
 
-        //const existingData = await Occupancy.findOne({ HotelId: hotelId, Date: date });
-        const formattedDate = new Date(date).toISOString().split("T")[0];
-        console.log("format d ", formattedDate)
+        // using the split method to extract the first part of the date to compare
+        const dateOnly = new Date(date).toISOString().split("T")[0];
+        console.log("format d ", dateOnly)
 
-        const time = new Date(formattedDate).setDate(new Date(formattedDate).getDate() + 1)
-        const datestamp = new Date(time);
+        // adding one day to the start date so occupancy rate can viewed per day
+        const nextDay = new Date(dateOnly).setDate(new Date(dateOnly).getDate() + 1)
+        console.log("next day ", nextDay)
+        // to convert it into date object
+        const dateObject = new Date(nextDay);
+        console.log("stamp ", dateObject)
 
-        const existingData = await Occupancy.findOne({ HotelId: hotelId, Date: { $gte: formattedDate, $lt: datestamp.toISOString() } });
+        // checking if occupancy data already exists
+        // check if the hotel id matches
+        // checks if date is greater than or equal to start date and less than then end date which mean it lies within 24 hours
+        const existingData = await Occupancy.findOne({ HotelId: hotelId, Date: { $gte: dateOnly, $lt: dateObject.toISOString() } });
         console.log("exist ", existingData)
 
-        console.log(datestamp.toISOString())
+        console.log(dateObject.toISOString())
 
+        // if it exists then update that else create a new record and save them
         if (existingData) {
             await Occupancy.updateOne({ _id: existingData._id }, { OccupancyRate: occupancyRate });
         } else {
@@ -179,30 +95,6 @@ const updateRate = async (occupancyData) => {
     }
 };
 
-
-// const findOccupancyRates = async (req, res) => {
-//     const { hotelId } = req.params;
-//     const { date, endDate } = req.query;
-
-
-//     try {
-//         const rates = await Occupancy.findOne({ HotelId: hotelId, Date: date });
-//         console.log(rates)
-//         if (!rates) {
-//             return res.status(404).json({ error: 'not results found' })
-//         }
-
-//         // const occupancyData = [{ date, occupancyRate, hotelId }];
-//         console.log(rates)
-//         const occupancyData = [{ date, occupancyRate: rates.OccupancyRate, hotelId: rates.HotelId }];
-//         res.json(occupancyData);
-//     }
-//     catch (error) {
-//         console.log(error)
-//         res.status(500).json({ error: 'server error' })
-//     }
-// }
-
 const findOccupancyRates = async (req, res) => {
     const { hotelId } = req.params;
     const { startDate, endDate } = req.query;
@@ -215,7 +107,7 @@ const findOccupancyRates = async (req, res) => {
         console.log(rates)
 
         if (!rates) {
-            return res.status(404).json({ error: 'No results found' });
+            return res.status(404).json({ error: 'No rooms reserved on this day' });
         }
 
         const occupancyData = rates.map((rate) => ({
@@ -235,13 +127,10 @@ const findOccupancyRates = async (req, res) => {
     }
 };
 
-
-cron.schedule('4 * * * *', () => {
-    console.log('running a task every hour');
+cron.schedule('0 * * * *', () => {
+    console.log('updating occupancy model every hour');
     calculateOccupancy();
-
 });
-
 
 
 module.exports = { calculateOccupancy, updateRate, findOccupancyRates };
