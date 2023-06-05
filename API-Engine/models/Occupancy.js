@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const OccupancySchema = new mongoose.Schema({
+    // model for saving all occupancy data
     Date: {
         type: Date,
         required: true,

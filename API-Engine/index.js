@@ -35,7 +35,7 @@ app.post('/login', userController.login);
 // logout endpoint
 app.post('/logout', userController.logout);
 // add hotel endpoint
-app.post('/addHotel', hotelController.addHotel);
+app.post('/addHotel',  hotelController.addHotel);
 // add room endpoint
 app.post('/addRoom/:hotelId', hotelController.addRoom);
 // find hotel endpoint
@@ -72,7 +72,7 @@ app.post('/changePass', forgotPass.changing_password);
 // delete booking
 app.post('/deleteBooking', hotelController.deleteBooking);
 
-// handles the static files upload to the uploads forlder
+// handles the static files upload to the uploads folder
 // for handling images for hotels and rooms
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

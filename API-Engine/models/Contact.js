@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
 const ContactSchema = new mongoose.Schema({
+    // model for messages
     name: {
         type: String,
         required: true,
-        
+
     },
 
     email: {
@@ -13,10 +14,10 @@ const ContactSchema = new mongoose.Schema({
 
     message: {
         type: String,
-        required:true
+        required: true
     },
 
-    
+
 });
 
 const Contact = mongoose.model('Contact', ContactSchema);

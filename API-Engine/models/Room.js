@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const RoomSchema = new mongoose.Schema({
+    // model for saving all rooms
     number: {
         type: Number,
         required: true,

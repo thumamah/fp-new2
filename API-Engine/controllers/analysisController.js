@@ -51,6 +51,7 @@ const calculateOccupancy = async () => {
     }
 };
 
+// function to update occupancy model
 const updateRate = async (occupancyData) => {
     try {
         // extracting all the occupancy data from the previous algorithm
@@ -60,7 +61,7 @@ const updateRate = async (occupancyData) => {
         const dateOnly = new Date(date).toISOString().split("T")[0];
         console.log("format d ", dateOnly)
 
-        // adding one day to the start date so occupancy rate can viewed per day
+        // adding one day to the start date so occupancy rate can be viewed per day
         const nextDay = new Date(dateOnly).setDate(new Date(dateOnly).getDate() + 1)
         console.log("next day ", nextDay)
         // to convert it into date object
@@ -95,21 +96,26 @@ const updateRate = async (occupancyData) => {
     }
 };
 
+// endpoint used by admin to fetch occupanbcy records by date and hotel
 const findOccupancyRates = async (req, res) => {
+    // extracting hotel id and dates
     const { hotelId } = req.params;
     const { startDate, endDate } = req.query;
 
     try {
+        // getting the occupancy data of the given date and hotel
         const rates = await Occupancy.find({
             HotelId: hotelId,
             Date: { $gte: new Date(startDate), $lte: new Date(endDate) },
         });
         console.log(rates)
 
+        // if none then send error
         if (!rates) {
             return res.status(404).json({ error: 'No rooms reserved on this day' });
         }
 
+        // iterate over occupancy data and prepare to send
         const occupancyData = rates.map((rate) => ({
             date: rate.Date,
             occupancyRate: rate.OccupancyRate,
@@ -118,19 +124,18 @@ const findOccupancyRates = async (req, res) => {
 
         res.json(occupancyData);
 
-        // const occupancyData = [{ date: rates.Date, OccupancyRate: rates.OccupancyRate, hotelId: rates.HotelId }];
-        // console.log(occupancyData)
-        // res.json(occupancyData);
+        // handle errors
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Server error' });
     }
 };
 
+// used cron jobs to schedule occupancy algorithm every hour
 cron.schedule('0 * * * *', () => {
     console.log('updating occupancy model every hour');
     calculateOccupancy();
 });
 
-
+// export these functions for use in other routes
 module.exports = { calculateOccupancy, updateRate, findOccupancyRates };

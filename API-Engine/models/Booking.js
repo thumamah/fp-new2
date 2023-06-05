@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const BookingSchema = new mongoose.Schema({
+  // booking model to save all booking details
     roomId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Room',

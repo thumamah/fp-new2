@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const HotelSchema = new mongoose.Schema({
+    // model for saving all hotels
     name: {
         type: String,
         required: true,
